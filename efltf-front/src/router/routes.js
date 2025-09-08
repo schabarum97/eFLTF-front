@@ -8,7 +8,8 @@ const routes = [
       { path: 'status', name: 'status', component: () => import('pages/StatusPage.vue'), meta: { title: 'Cadastro de Status' } },
       { path: 'cidade', name: 'cidade', component: () => import('pages/CidadePage.vue'), meta: { title: 'Cadastro de Cidade' } },
       { path: 'cliente', name: 'cliente', component: () => import('pages/ClientePage.vue'), meta: { title: 'Cadastro de Cliente' } },
-      { path: 'endereco', name: 'endereco', component: () => import('pages/EnderecoPage.vue'), meta: { title: 'Cadastro de Endereco' } }
+      { path: 'endereco', name: 'endereco', component: () => import('pages/EnderecoPage.vue'), meta: { title: 'Cadastro de Endereco' } },
+      { path: 'ordem', name: 'ordem', component: () => import('pages/OrdemPage.vue'), meta: { title: 'Cadastro de Ordem' } }
     ]
   },
 

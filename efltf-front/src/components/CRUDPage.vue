@@ -1,14 +1,15 @@
 <template>
-  <q-page class="full-height">
-    <div class="row full-height q-col-gutter-md">
-
-      <q-card class="col-12 col-md-5 q-pa-md full-height scrollable-card">
+  <!-- q-page já respeita o header/toolbar do Quasar -->
+  <q-page class="q-pa-md page-grid">
+    <!-- COLUNA: FORM -->
+    <div class="form-col">
+      <q-card class="q-pa-md form-card">
         <q-card-section class="q-pa-none q-mb-md">
           <div class="text-h6">{{ formData.id ? 'Editar Registro' : 'Novo Registro' }}</div>
           <div class="text-caption text-grey-7">Preencha os campos e salve para atualizar a listagem</div>
         </q-card-section>
 
-        <q-form ref="form" @submit.prevent="handleSubmit">
+        <q-form ref="form" @submit.prevent="handleSubmit" class="form-body">
           <!-- ID -->
           <q-input
             v-model="formData.id"
@@ -177,9 +178,11 @@
           </div>
         </q-form>
       </q-card>
+    </div>
 
-      <!-- TABELA -->
-      <q-card class="col-12 col-md-7 q-pa-none full-height table-card">
+    <!-- COLUNA: TABELA -->
+    <div class="table-col">
+      <q-card class="table-card">
         <q-card-section class="q-pa-sm table-toolbar">
           <div class="row items-center q-col-gutter-sm wrap">
             <div class="col-12 col-sm-8 col-md-9">
@@ -207,7 +210,8 @@
           </div>
         </q-card-section>
 
-        <div class="table-container">
+        <!-- Scroll apenas no miolo -->
+        <div class="table-scroll">
           <q-table
             :rows="items"
             :columns="normalizedColumns"
@@ -281,22 +285,22 @@
           <div class="text-body2">Nenhum registro por aqui.</div>
         </q-card-section>
       </q-card>
-
-      <!-- CONFIRMAÇÃO EXCLUSÃO -->
-      <q-dialog v-model="confirm.open">
-        <q-card>
-          <q-card-section class="text-h6">Confirmar exclusão</q-card-section>
-          <q-card-section class="text-body2">
-            Tem certeza que deseja excluir este registro?
-          </q-card-section>
-          <q-card-actions align="right">
-            <q-btn flat label="Cancelar" v-close-popup />
-            <q-btn color="red" label="Excluir" @click="deleteItem(confirm.id)" v-close-popup />
-          </q-card-actions>
-        </q-card>
-      </q-dialog>
-
     </div>
+
+    <!-- CONFIRMAÇÃO EXCLUSÃO -->
+    <q-dialog v-model="confirm.open">
+      <q-card>
+        <q-card-section class="text-h6">Confirmar exclusão</q-card-section>
+        <q-card-section class="text-body2">
+          Tem certeza que deseja excluir este registro?
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" v-close-popup />
+          <q-btn color="red" label="Excluir" @click="deleteItem(confirm.id)" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
   </q-page>
 </template>
 
@@ -320,6 +324,7 @@ export default {
       dense: true,
       formData: { id: null },
       confirm: { open: false, id: null },
+      suppressDependsReset: false,
       lookupCache: {},
       lookupLoading: {}
     }
@@ -380,7 +385,6 @@ export default {
       if (field.type === 'color') {
         rules.push(v => {
           if (!v) return true
-          // aceita #RGB, #RRGGBB, #RRGGBBAA
           return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(v) || 'Cor inválida'
         })
       }
@@ -392,7 +396,6 @@ export default {
       const mask = field.format || 'YYYY-MM-DD'
       const disp = field.displayFormat || 'DD/MM/YYYY'
       if (!val) return ''
-      // simples conversão (assumindo val já no mask)
       if (mask === 'YYYY-MM-DD' && disp === 'DD/MM/YYYY') {
         const [y, m, d] = String(val).split('-')
         return (y && m && d) ? `${d}/${m}/${y}` : ''
@@ -400,11 +403,9 @@ export default {
       return val
     },
     onDatePick (field, value) {
-      // value já vem no mask do q-date
       this.formData[field.model] = value
     },
     onDateInput (field, displayValue) {
-      // usuário limpou
       if (!displayValue) {
         this.formData[field.model] = null
       }
@@ -422,15 +423,12 @@ export default {
       }
     },
     onCurrencyInput (field, display) {
-      // Remove tudo que não seja dígito ou vírgula/ponto e tenta normalizar
       if (!display) {
         this.formData[field.model] = null
         return
       }
       const cleaned = String(display).replace(/[^\d,.-]/g, '')
-      const normalized = cleaned
-        .replace(/\./g, '')        // remove separador de milhar
-        .replace(',', '.')         // vírgula -> ponto
+      const normalized = cleaned.replace(/\./g, '').replace(',', '.')
       const n = Number(normalized)
       this.formData[field.model] = Number.isNaN(n) ? null : n
     },
@@ -441,6 +439,7 @@ export default {
       const val = field.optionValue || 'value'
       return opts.map(o => (typeof o === 'object' ? o : { [lbl]: String(o), [val]: o }))
     },
+
     async filterLookup (field, val, update, abort) {
       if (typeof field.fetchOptions !== 'function') {
         update(() => {
@@ -450,7 +449,8 @@ export default {
       }
       this.lookupLoading = { ...this.lookupLoading, [field.model]: true }
       try {
-        const list = await field.fetchOptions(val)
+        const ctx = { formData: this.formData }
+        const list = await field.fetchOptions(val, ctx)
         update(() => {
           this.lookupCache[field.model] = this.normalizeOptions(list || [], field)
         })
@@ -462,16 +462,118 @@ export default {
       }
     },
 
-    // ========= COLOR =========
-    normalizeColor (val, field) {
-      // garante hex com '#'
-      const fmt = (field.format || 'hex').toLowerCase()
-      if (!val) return null
-      if (fmt === 'hex') {
-        const v = String(val).startsWith('#') ? val : `#${val}`
-        return v.length === 4 || v.length === 7 || v.length === 9 ? v : v.slice(0, 7)
+    // Observa campos com dependsOn e reseta quando a dependência muda
+    wireDepends () {
+      (this.formFields || [])
+        .filter(f => f.type === 'lookup' && f.dependsOn)
+        .forEach(f => {
+          this.$watch(
+            () => this.formData[f.dependsOn],
+            (newVal, oldVal) => {
+              if (this.suppressDependsReset) return;       // <— não limpe durante hidratação
+              if (newVal === oldVal) return;
+              this.formData[f.model] = null;
+              this.lookupCache[f.model] = [];
+            },
+            { immediate: false }
+          )
+        })
+    },
+
+    // Observa campos com deriveFrom/deriveValue e atualiza automaticamente
+    wireDerived () {
+      (this.formFields || [])
+        .filter(f => typeof f.deriveValue === 'function' && f.deriveFrom)
+        .forEach(f => {
+          this.$watch(
+            () => this.formData[f.deriveFrom],
+            async () => {
+              try {
+                const v = await f.deriveValue(this.formData)
+                this.formData[f.model] = v
+              } catch (e) {
+                console.warn('deriveValue falhou para', f.model, e)
+              }
+            },
+            { immediate: true }
+          )
+        })
+    },
+
+    // ========= LOOKUP HYDRATION =========
+    async ensureLookupOption(field, value) {
+      if (value === null || value === undefined || value === '') return
+
+      const model  = field.model
+      const lblKey = field.optionLabel || 'label'
+      const valKey = field.optionValue || 'value'
+
+      const cached = this.lookupCache[model] || []
+      const exists = cached.some(opt => (opt?.[valKey] ?? opt?.value) === value)
+      if (exists) return
+
+      let option = null
+      const mustCheckOwnership = !!field.dependsOn // se tem dependsOn, não use rótulo “inventado”
+
+      // Só use composições locais se NÃO houver dependsOn (pra não burlar a validação)
+      if (!mustCheckOwnership && field.labelProp && this.formData?.[field.labelProp]) {
+        option = { [lblKey]: String(this.formData[field.labelProp]), [valKey]: value }
       }
-      return val
+      if (!mustCheckOwnership && Array.isArray(field.composeLabelFrom) && field.composeLabelFrom.length) {
+        const sep = field.composeSeparator ?? ' - '
+        const parts = field.composeLabelFrom
+          .map(k => this.formData?.[k])
+          .filter(v => v !== undefined && v !== null && String(v).trim() !== '')
+        if (parts.length) {
+          option = { [lblKey]: parts.join(sep), [valKey]: value }
+        }
+      }
+
+      // Sempre tente validar via resolveOption com ctx (especialmente quando tem dependsOn)
+      if (!option) {
+        try {
+          if (typeof field.resolveOption === 'function') {
+            option = await field.resolveOption(value, { formData: this.formData }) // <<<<<< AQUI
+          } else if (typeof field.fetchById === 'function') {
+            option = await field.fetchById(value)
+          }
+        } catch (e) {
+          console.warn(`Falha ao resolver option (${model}) via API:`, e)
+        }
+      }
+
+      // Se resolveOption retornou null => inválido (ex.: endereço não pertence ao cliente)
+      if (option === null) {
+        this.formData[model] = null
+        this.$q?.notify?.({
+          type: 'warning',
+          message: 'O endereço selecionado não pertence ao cliente atual.',
+          position: 'top-right',
+          timeout: 2500
+        })
+        return
+      }
+
+      // fallback final (evite usar em campos com dependsOn)
+      if (!option) {
+        option = { [lblKey]: String(value), [valKey]: value }
+      }
+
+      const normalized = typeof option === 'object'
+        ? option
+        : { [lblKey]: String(option), [valKey]: value }
+
+      this.lookupCache = {
+        ...this.lookupCache,
+        [model]: [...cached, normalized]
+      }
+    },
+
+    async hydrateLookupsFromForm() {
+      const tasks = (this.formFields || [])
+        .filter(f => f.type === 'lookup')
+        .map(f => this.ensureLookupOption(f, this.formData[f.model]))
+      await Promise.all(tasks)
     },
 
     // ========= CRUD =========
@@ -484,17 +586,27 @@ export default {
         this.$q.notify({ type: 'negative', message: 'Erro ao buscar registros', position: 'top-right', timeout: 3000 })
       }
     },
+
     async fetchById () {
       if (!this.formData.id && this.formData.id !== 0) return
-      try {
-        const data = await this.service.getById(this.formData.id)
-        if (data.item) this.formData = { ...data.item }
-        else this.clearForm()
+        try {
+          const data = await this.service.getById(this.formData.id)
+          if (data.item) {
+            this.suppressDependsReset = true; 
+            this.formData = { ...data.item }
+            await this.$nextTick()
+            await this.hydrateLookupsFromForm()
+            this.suppressDependsReset = false;
+            this.$refs.form?.resetValidation()
+          } else {
+            this.clearForm()
+          }
       } catch (err) {
         console.error('Erro ao buscar registro:', err)
         this.$q.notify({ type: 'negative', message: 'Erro ao buscar registro', position: 'top-right', timeout: 3000 })
       }
     },
+
     async handleSubmit () {
       const ok = await this.$refs.form.validate()
       if (!ok) {
@@ -520,10 +632,17 @@ export default {
         this.$q.notify({ type: 'negative', message: 'Erro ao salvar registro', position: 'top-right', timeout: 3000 })
       }
     },
+
     editItem (item) {
+      this.suppressDependsReset = true;
       this.formData = { ...item }
-      this.$nextTick(() => this.$refs.form?.resetValidation())
+      this.$nextTick(async () => {
+        await this.hydrateLookupsFromForm()
+        this.suppressDependsReset = false;
+        this.$refs.form?.resetValidation()
+      })
     },
+
     confirmDelete (id) {
       this.confirm = { open: true, id }
     },
@@ -537,60 +656,100 @@ export default {
         this.$q.notify({ type: 'negative', message: 'Erro ao excluir registro ' + err, position: 'top-right', timeout: 3000 })
       }
     },
+
     clearForm () {
       this.formData = { id: null }
       this.formFields.forEach(f => (this.formData[f.model] = null))
       this.$refs.form?.resetValidation()
     },
+
     rowClass (_, rowIndex) {
       return rowIndex % 2 === 0 ? 'row-even' : 'row-odd'
     }
   },
   mounted () {
     this.fetchAll()
+    this.wireDepends()
+    this.wireDerived()
   }
 }
 </script>
 
 <style scoped>
-.scrollable-card { overflow-y: auto; }
-
-.table-toolbar { border-bottom: 1px solid rgba(0,0,0,0.06); }
-
-.table-container {
-  overflow-x: auto;
-  max-height: calc(100vh - 260px);
+/* GRID principal: 2 colunas, altura = área útil do q-page */
+.page-grid{
+  display:grid;
+  grid-template-columns: minmax(320px, 520px) 1fr;
+  gap:12px;
+  height:100%;        /* q-page já calcula o espaço útil (desconta header/drawer) */
+  overflow:hidden;    /* evita “invadir” o header */
 }
 
-.table-header th {
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  background: var(--q-table-bg, #fff);
-  backdrop-filter: saturate(180%) blur(2px);
+/* Coluna do form */
+.form-col{ min-width:0; }
+.form-card{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.form-body{
+  flex:1 1 auto;
+  min-height:0;
+  overflow:auto;      /* rolagem só do formulário quando precisar */
 }
 
-.sticky-left {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  background: var(--q-table-row-bg, #fff);
-  box-shadow: 1px 0 0 rgba(0,0,0,0.06);
+/* Coluna da tabela */
+.table-col{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+}
+.table-card{
+  flex:1 1 auto;
+  display:flex;
+  min-height:0;
+  border-radius:14px;
+  overflow:hidden;    /* borda arredondada + recorte do conteúdo */
+}
+.table-toolbar{
+  border-bottom:1px solid rgba(0,0,0,0.06);
+  flex:0 0 auto;
 }
 
-.q-table th, .q-table td { white-space: nowrap; text-align: left; }
-.cell-ellipsis { max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
+/* Scroll só no miolo da tabela */
+.table-scroll{
+  flex:1 1 auto;
+  min-height:0;
+  overflow:auto;
+}
 
-.q-table tbody tr { transition: background-color .12s ease; }
-.row-even { background: #fafafa; }
-.q-table tbody tr:hover { background: #f1f5f9; }
+/* Header sticky olhando pro container com overflow (table-scroll) */
+.table-header th{
+  position:sticky;
+  top:0;
+  z-index:3;
+  background:var(--q-table-bg,#fff);
+  backdrop-filter:saturate(180%) blur(2px);
+}
 
-.action-column { min-width: 160px; }
-@media (max-width: 1023px) { .action-column { min-width: 140px; } }
-@media (max-width: 599px)  { .action-column { min-width: 128px; } }
-.btn-action { min-width: 86px; }
+/* Ações fixas à esquerda */
+.sticky-left{
+  position:sticky;
+  left:0;
+  z-index:2;
+  background:var(--q-table-row-bg,#fff);
+  box-shadow:1px 0 0 rgba(0,0,0,0.06);
+}
 
-.table-card { border-radius: 14px; overflow: hidden; }
-
-.q-table--flat .q-table__middle { border-top: 1px solid rgba(0,0,0,0.06); }
+/* Visual */
+.q-table th, .q-table td { white-space:nowrap; text-align:left; }
+.cell-ellipsis{ max-width:280px; overflow:hidden; text-overflow:ellipsis; }
+.q-table tbody tr{ transition:background-color .12s ease; }
+.row-even{ background:#fafafa; }
+.q-table tbody tr:hover{ background:#f1f5f9; }
+.action-column{ min-width:160px; }
+@media (max-width:1023px){ .action-column{ min-width:140px; } }
+@media (max-width:599px){ .action-column{ min-width:128px; } }
+.btn-action{ min-width:86px; }
 </style>

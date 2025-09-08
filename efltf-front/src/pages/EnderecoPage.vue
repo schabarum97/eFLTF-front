@@ -13,7 +13,6 @@ import CRUDPage from 'src/components/CRUDPage.vue'
 import { Endereco } from 'src/services/EnderecoService.js'
 import { Cliente } from 'src/services/ClienteService.js'
 import { Cidade } from 'src/services/CidadeService.js'
-import { Uf } from 'src/services/UfService.js'
 
 function normalizeEnderecoForForm (item) {
   if (!item) return item
@@ -55,6 +54,7 @@ const formFields = [
     required: true,
     optionLabel: 'label',
     optionValue: 'id',
+
     async fetchOptions (term) {
       const data = await Cliente.getAll()
       const arr = (data.items ?? data.clientes ?? [])
@@ -64,32 +64,17 @@ const formFields = [
       }))
       if (term) {
         const t = String(term).toLowerCase()
-        list = list.filter(o => o.label.toLowerCase().includes(t))
+        list = list.filter(o => o.label?.toLowerCase().includes(t))
       }
       return list
-    }
-  },
-  {
-    model: 'uf_id',
-    label: 'UF',
-    type: 'lookup',
-    required: true,
-    optionLabel: 'label',
-    optionValue: 'id',
-    async fetchOptions (term) {
-      const data = await Uf.getAll()
-      const arr = (data.items ?? data.ufs ?? [])
-      let list = arr.map(u => {
-        const id = u.id ?? u.uf_id
-        const nome = u.nome ?? u.uf_nome
-        const sigla = u.sigla ?? u.uf_sigla
-        return { id, label: `${sigla} — ${nome}`, sigla, nome }
-      })
-      if (term) {
-        const t = String(term).toLowerCase()
-        list = list.filter(o => o.label.toLowerCase().includes(t))
-      }
-      return list
+    },
+
+    composeLabelFrom: ['cliente_nome', ''],
+    composeSeparator: ' ',
+
+    async resolveOption (id) {
+      const { item } = await Cliente.getById(id)
+      return { id: item.id ?? item.cli_id, label: item.nome ?? item.cli_nome }
     }
   },
   {
@@ -99,6 +84,7 @@ const formFields = [
     required: true,
     optionLabel: 'label',
     optionValue: 'id',
+
     async fetchOptions (term /*, _update, _abort, formModel */) {
       const data = await Cidade.getAll()
       const arr = (data.items ?? data.cidades ?? [])
@@ -106,14 +92,23 @@ const formFields = [
         id: c.id ?? c.cid_id,
         label: `${(c.uf_sigla ?? '').toString()} — ${(c.nome ?? c.cid_nome).toString()}`,
         nome: c.nome ?? c.cid_nome,
-        uf_id: c.uf_id,
         uf_sigla: c.uf_sigla
       }))
       if (term) {
         const t = String(term).toLowerCase()
-        list = list.filter(o => o.label.toLowerCase().includes(t))
+        list = list.filter(o => o.label?.toLowerCase().includes(t))
       }
       return list
+    },
+
+    composeLabelFrom: ['nome', 'uf_sigla'],
+    composeSeparator: ' — ',
+
+    async resolveOption (id) {
+      const { item } = await Cidade.getById(id)
+      const nome = item.nome ?? item.cid_nome
+      const sigla = item.uf_sigla ?? item.uf?.sigla
+      return { id: item.id ?? item.cid_id, label: `${(sigla ?? '').toString()} — ${nome.toString()}` }
     }
   },
   { model: 'cli_logradouro', label: 'Logradouro',  type: 'text', required: true, maxlength: 200 },
@@ -137,7 +132,6 @@ const columns = [
   { name: 'id',         label: 'Código',     field: 'id' },
   { name: 'cliente',    label: 'Cliente',    field: 'cliente_nome' },
   { name: 'cidade',     label: 'Cidade',     field: 'cidade_nome' },
-  { name: 'uf_sigla',   label: 'UF',         field: 'uf_sigla' },
   { name: 'logradouro', label: 'Logradouro', field: 'logradouro' },
   { name: 'numero',     label: 'Número',     field: 'numero' },
   { name: 'bairro',     label: 'Bairro',     field: 'bairro' },

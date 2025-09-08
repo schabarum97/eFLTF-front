@@ -15,25 +15,24 @@ import { Uf } from 'src/services/UfService.js'
 
 const formFields = [
   { model: 'nome', label: 'Nome da Cidade', required: true, type: 'text' },
-  {
+    {
     model: 'uf_id',
     label: 'UF',
     type: 'lookup',
-    required: true,
-    optionLabel: 'label',   // o dropdown mostra "SIGLA — Nome"
-    optionValue: 'id',      // o form salva o ID
+    optionLabel: 'label',
+    optionValue: 'value',
+
     async fetchOptions (term) {
-      const data = await Uf.getAll() // já existe no teu adapter
-      const arr = (data.items ?? data.ufs ?? [])
-      const list = arr.map(u => {
-        const id = u.id ?? u.uf_id
-        const nome = u.nome ?? u.uf_nome
-        const sigla = u.sigla ?? u.uf_sigla
-        return { id, label: `${sigla} — ${nome}` }
-      })
-      if (!term) return list
-      const t = String(term).toLowerCase()
-      return list.filter(o => o.label.toLowerCase().includes(t))
+      const { items } = await Uf.getAll({ q: term })
+      return items.map(u => ({ label: `${u.sigla} – ${u.nome}`, value: u.id }))
+    },
+
+    composeLabelFrom: ['uf_sigla', 'uf_nome'],
+    composeSeparator: ' – ',
+
+    async resolveOption (id) {
+      const { item } = await Uf.getById(id)
+      return { label: `${item.sigla} – ${item.nome}`, value: item.id }
     }
   }
 ]

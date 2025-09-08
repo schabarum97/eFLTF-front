@@ -207,11 +207,12 @@ const systemLinks = {
     { title: 'Consulta Produtos', icon: 'inventory',      link: '/consultas/produtos' }
   ],
   cadastros: [
-    { title: 'UF',    icon: 'public',            link: '/uf' },
-    { title: 'Status',  icon: 'flag',        link: '/status' },
-    { title: 'Cidade',  icon: 'location_city',         link: '/cidade' },
-    { title: 'Cliente',  icon: 'people',         link: '/cliente' },
-    { title: 'Endereço',  icon: 'homepin',         link: '/endereco' }
+    { title: 'UF',    icon: 'public', link: '/uf' },
+    { title: 'Status',  icon: 'flag', link: '/status' },
+    { title: 'Cidade',  icon: 'location_city', link: '/cidade' },
+    { title: 'Cliente',  icon: 'people', link: '/cliente' },
+    { title: 'Endereço',  icon: 'homepin', link: '/endereco' },
+    { title: 'Ordem',  icon: 'homepin', link: '/ordem' }
   ],
   agenda: [
     { title: 'Agenda Reuniões',   icon: 'event',          link: '/agenda/reunioes' },
