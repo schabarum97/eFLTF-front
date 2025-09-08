@@ -15,6 +15,7 @@ import { Uf } from 'src/services/UfService.js'
 
 const formFields = [
   { model: 'nome', label: 'Nome da Cidade', required: true, type: 'text' },
+  { model: 'deslocamento', label: 'Tempo deslocamento', required: true, type: 'number' },
     {
     model: 'uf_id',
     label: 'UF',
@@ -40,6 +41,7 @@ const formFields = [
 const columns = [
   { name: 'id',       label: 'Código',  field: 'id' },
   { name: 'nome',     label: 'Cidade',  field: 'nome' },
+  { name: 'deslocamento', label: 'Tempo deslocamento',      field: 'deslocamento' },
   { name: 'uf_sigla', label: 'UF',      field: 'uf_sigla' },
   { name: 'uf_nome',  label: 'UF Nome', field: 'uf_nome' }
 ]

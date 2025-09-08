@@ -500,7 +500,6 @@ export default {
         })
     },
 
-    // ========= LOOKUP HYDRATION =========
     async ensureLookupOption(field, value) {
       if (value === null || value === undefined || value === '') return
 
@@ -533,7 +532,7 @@ export default {
       if (!option) {
         try {
           if (typeof field.resolveOption === 'function') {
-            option = await field.resolveOption(value, { formData: this.formData }) // <<<<<< AQUI
+            option = await field.resolveOption(value, { formData: this.formData })
           } else if (typeof field.fetchById === 'function') {
             option = await field.fetchById(value)
           }
@@ -554,7 +553,6 @@ export default {
         return
       }
 
-      // fallback final (evite usar em campos com dependsOn)
       if (!option) {
         option = { [lblKey]: String(value), [valKey]: value }
       }
@@ -583,7 +581,7 @@ export default {
         this.items = data.items || []
       } catch (err) {
         console.error('Erro ao buscar registros:', err)
-        this.$q.notify({ type: 'negative', message: 'Erro ao buscar registros', position: 'top-right', timeout: 3000 })
+        this.$q.notify({ type: 'negative', message: 'Erro ao buscar registros ' + err.response.status + ' - ' + err.response.data, position: 'top-right', timeout: 3000 })
       }
     },
 
@@ -603,7 +601,7 @@ export default {
           }
       } catch (err) {
         console.error('Erro ao buscar registro:', err)
-        this.$q.notify({ type: 'negative', message: 'Erro ao buscar registro', position: 'top-right', timeout: 3000 })
+        this.$q.notify({ type: 'negative', message: 'Erro ao buscar registro ' + err.response.status + ' - ' + err.response.data, position: 'top-right', timeout: 3000 })
       }
     },
 
@@ -629,7 +627,7 @@ export default {
         await this.fetchAll()
       } catch (err) {
         console.error('Erro ao salvar registro:', err)
-        this.$q.notify({ type: 'negative', message: 'Erro ao salvar registro', position: 'top-right', timeout: 3000 })
+        this.$q.notify({ type: 'negative', message: 'Erro ao salvar registro ' + err.response.status + ' - ' + err.response.data, position: 'top-right', timeout: 3000 })
       }
     },
 
@@ -652,8 +650,7 @@ export default {
         this.$q.notify({ type: 'positive', message: 'Registro excluído com sucesso!', position: 'top-right', timeout: 2500 })
         await this.fetchAll()
       } catch (err) {
-        console.error('Erro ao excluir registro:', err)
-        this.$q.notify({ type: 'negative', message: 'Erro ao excluir registro ' + err, position: 'top-right', timeout: 3000 })
+        this.$q.notify({ type: 'negative', message: 'Erro ao excluir registro ' + err.response.status + ' - ' + err.response.data, position: 'top-right', timeout: 3000 })
       }
     },
 
