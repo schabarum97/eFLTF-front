@@ -17,15 +17,16 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import ConsultaPage from 'src/components/ConsultaPage.vue'
-
 import { OrdemPag } from 'src/services/OrdemPagService.js'
 import { Cliente }  from 'src/services/ClienteService.js'
 import { FormaPag } from 'src/services/FormaPagService.js'
 
 const $q = useQuasar()
 const consultaRef = ref(null)
+const router = useRouter()
 
 const filterFields = [
   { model: 'ord_id', label: 'Ordem de Serviço', type: 'number', dense: true },
@@ -153,6 +154,17 @@ const rowActions = [
         console.error(err)
         $q.notify({ type: 'negative', message: 'Erro ao estornar pagamento.' })
       }
+    }
+  }, 
+  {
+    label: 'Abrir OS',
+    icon: 'open_in_new',
+    color: 'grey-8',
+    handler: async row => {
+      function abrirOS (row) {
+        router.push({ name: 'ordemfull', query: { ord_id: row.ordem_id } })
+      }
+      abrirOS(row)
     }
   }
 ]

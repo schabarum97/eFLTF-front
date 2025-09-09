@@ -195,11 +195,12 @@ const systemLinks = {
     { title: 'Cliente', icon: 'people', link: '/cliente' },
     { title: 'Endereço', icon: 'place', link: '/endereco' },
     { title: 'Forma de pagamento', icon: 'credit_card', link: '/formapag' },
-    { title: 'Ordem Full', icon: 'receipt_long', link: '/ordemfull' }
+    { title: 'Responsável', icon: 'person', link: '/responsavel' },
+    { title: 'Veículo', icon: 'local_shipping', link: '/veiculo' },
+    { title: 'Ordem Serviço', icon: 'receipt_long', link: '/ordemfull' }
   ],
   agenda: [
-    { title: 'Agenda Reuniões', icon: 'event', link: '/agenda/reunioes' },
-    { title: 'Agenda Entregas', icon: 'local_shipping', link: '/agenda/entregas' }
+    { title: 'Agenda de serviços', icon: 'local_shipping', link: '/servicos' }
   ]
 }
 </script>

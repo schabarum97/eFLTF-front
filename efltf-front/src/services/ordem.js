@@ -31,6 +31,7 @@ export const Ordem = {
 
   async updateOrdem(data) {
     try {
+      console.log('updateOrdem', data)
       return (await api.patch(`/ordem/${data.id}`, data)).data
     } catch (err) {
       throw err

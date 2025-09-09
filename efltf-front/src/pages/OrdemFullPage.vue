@@ -202,6 +202,29 @@
                 <template #prepend><q-icon name="inventory" /></template>
               </q-select>
 
+              <q-select
+                class="col-12 col-sm-6"
+                v-model="ordemForm.usu_id"
+                label="Responsável"
+                use-input
+                input-debounce="300"
+                :options="responsavelLookupOptions"
+                :option-label="o => o?.label ?? ''"
+                :option-value="o => o?.value ?? null"
+                emit-value
+                map-options
+                dense
+                outlined
+                clearable
+                :loading="ui.loading.responsavel"
+                @filter="filterResponsavel"
+              >
+                <template #prepend><q-icon name="badge" /></template>
+                <template #no-option>
+                  <q-item><q-item-section class="text-grey">Sem resultados</q-item-section></q-item>
+                </template>
+              </q-select>
+
               <!-- Data em DD/MM/YYYY -->
               <q-input class="col-6 col-sm-3" v-model="ordemForm.dataBR" label="Data" dense outlined readonly clearable>
                 <template #prepend><q-icon name="event" /></template>
@@ -448,6 +471,7 @@ import { Status } from 'src/services/StatusService'
 import { Ordem } from 'src/services/OrdemService'
 import { FormaPag } from 'src/services/FormaPagService'
 import { OrdemPag } from 'src/services/OrdemPagService'
+import { Responsavel } from 'src/services/ResponsavelService'
 
 /* (ISO -> BR */
 function isoToBR (iso) {
@@ -527,11 +551,13 @@ function apiOrdemToForm (o = {}) {
     cli_id: o.cli_id ?? null,
     end_id: o.end_id ?? null,
     stt_id: o.stt_id ?? o.status_id ?? null,
+    usu_id: o.usu_id ?? o.responsavel_id ?? null,
     observacao: o.observacao ?? o.descricao ?? '',
     data: o.data ?? null,
     hora: o.hora ?? null,
     cliente_nome: o.cliente_nome ?? '',
-    status_nome:  o.status_nome ?? o.stt_nome ?? ''
+    status_nome:  o.status_nome ?? o.stt_nome ?? '',
+    responsavel_nome: o.responsavel_nome ?? o.usu_nome ?? ''
   }
 }
 function formOrdemToApi (f = {}) {
@@ -540,6 +566,7 @@ function formOrdemToApi (f = {}) {
     cli_id: f.cli_id,
     end_id: f.end_id,
     stt_id: f.stt_id,
+    usu_id: f.usu_id,
     observacao: (f.observacao || '').trim(),
     data: f.data || null,
     hora: f.hora || null
@@ -561,7 +588,7 @@ export default {
         cli_endereco: '', cli_cep: '', cli_ativo: 'S'
       },
 
-      ordemForm: { id: null, cli_id: null, end_id: null, stt_id: null, observacao: '', data: null, dataBR: null, hora: null },
+      ordemForm: { id: null, cli_id: null, end_id: null, stt_id: null, usu_id: null, observacao: '', data: null, dataBR: null, hora: null },
 
       // PAGAMENTOS
       pagamentoForm: {
@@ -584,6 +611,7 @@ export default {
       statusLookupOptions: [],
       ufOptions: [],
       formaPagOptions: [],
+      responsavelLookupOptions: [],
 
       ui: {
         loading: {
@@ -592,6 +620,7 @@ export default {
           lookupCidade: false,
           uf: false,
           status: false,
+          responsavel: false,
           savingAll: false,
           savingEndereco: false
         },
@@ -760,6 +789,28 @@ export default {
       } catch (e) { console.error(e); abort() } finally { this.ui.loading.status = false }
     },
     onPickStatus () { /* noop */ },
+
+    async filterResponsavel (val, update, abort) {
+      this.ui.loading.responsavel = true
+      try {
+        const { items } = await Responsavel.getAll()
+        const list = (items || [])
+          .filter(r => !val || String(r.nome).toLowerCase().includes(String(val).toLowerCase()))
+          .map(r => ({ label: `${r.id} — ${r.nome}`, value: r.id, raw: r }))
+        update(() => { this.responsavelLookupOptions = list })
+      } catch (e) {
+        console.error(e); abort()
+      } finally {
+        this.ui.loading.responsavel = false
+      }
+    },
+
+    async loadResponsaveisOptionsInit () {
+      try {
+        const { items } = await Responsavel.getAll()
+        this.responsavelLookupOptions = (items || []).map(r => ({ label: `${r.id} — ${r.nome}`, value: r.id }))
+      } catch {}
+    },
 
     // Forma de pagamento
     async filterFormaPag (val, update, abort) {
@@ -988,6 +1039,16 @@ export default {
           this.enderecoForm.uf_id = cid?.uf_id ?? cid?.uf?.id ?? this.enderecoForm.uf_id
         } catch {}
       }
+
+      if (this.ordemForm.usu_id && !this.responsavelLookupOptions.find(o => o.value === this.ordemForm.usu_id)) {
+        try {
+          const r = await Responsavel.getResponsavel(this.ordemForm.usu_id).then(x => x.item)
+          if (r) this.responsavelLookupOptions = [
+            ...this.responsavelLookupOptions,
+            { label: `${r.id} — ${r.nome}`, value: r.id }
+          ]
+        } catch {}
+      }
     },
 
     // Pagamentos (OS)
@@ -1102,12 +1163,77 @@ export default {
         const { items } = await Uf.getAll()
         this.ufOptions = (items || []).map(u => ({ id: u.id, sigla: u.sigla, nome: u.nome }))
       } finally { this.ui.loading.uf = false }
+    },
+
+    async handleDeepLink () {
+    const { params = {}, query = {} } = this.$route || {}
+    // aceita tanto params quanto query
+    const ordId   = query.ord_id ?? query.id ?? params.ord_id ?? params.id ?? null
+    const cliId   = query.cli_id ?? params.cli_id ?? null
+    const endId   = query.end_id ?? params.end_id ?? null
+    const dataISO = query.data   ?? null       // YYYY-MM-DD
+    const hora    = query.hora   ?? null       // HH:mm
+
+    // 1) Se veio ord_id -> carrega OS completa
+    if (ordId) {
+      await this.loadOrderIntoForm({ id: Number(ordId) })
+      return
+    }
+
+    // 2) Pré-preenche cliente/endereço se vieram
+    if (cliId) {
+      try {
+        const { item: c } = await Cliente.getById(cliId)
+        if (c?.id) {
+          this.clienteForm.id  = c.id
+          this.clienteForm.nome = c.nome ?? ''
+          this.enderecoForm.cli_id = c.id
+          this.ordemForm.cli_id    = c.id
+        }
+      } catch {}
+    }
+
+    if (endId) {
+      try {
+        const { item: e } = await Endereco.getById(endId)
+        if (e?.id) {
+          this.enderecoForm = apiEnderecoToForm(e)
+          this.ordemForm.end_id = this.enderecoForm.id
+          // garantir UF via cidade
+          if (!this.enderecoForm.uf_id && this.enderecoForm.cid_id) {
+            try {
+              const { item: cid } = await Cidade.getById(this.enderecoForm.cid_id)
+              this.enderecoForm.uf_id = cid?.uf_id ?? cid?.uf?.id ?? this.enderecoForm.uf_id
+            } catch {}
+          }
+        }
+      } catch {}
+    }
+
+    // 3) Pré-preenche data/hora de criação
+    if (dataISO) {
+      // converte ISO (YYYY-MM-DD) para BR (DD/MM/YYYY) pro input
+      this.ordemForm.data   = dataISO
+      this.ordemForm.dataBR = isoToBR(dataISO)
+    }
+    if (hora) {
+      this.ordemForm.hora = hora.length === 5 ? hora + ':00' : hora // aceita HH:mm
     }
   },
+
+  async onRouteChange () {
+    await this.handleDeepLink()
+  }
+  },
   async mounted () {
-    await Promise.all([this.fetchOrdens(), this.loadUfs(), this.loadFormaPagOptionsInit()])
+    await Promise.all([this.fetchOrdens(), 
+                       this.loadUfs(), 
+                       this.loadFormaPagOptionsInit(), 
+                       this.loadResponsaveisOptionsInit()])
     this.updateHeaderOffset()
     window.addEventListener('resize', this.updateHeaderOffset)
+    await this.handleDeepLink()
+    this.$watch(() => this.$route.fullPath, () => this.onRouteChange(), { immediate: false })
   },
   beforeUnmount () {
     window.removeEventListener('resize', this.updateHeaderOffset)
