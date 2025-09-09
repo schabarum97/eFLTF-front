@@ -1,4 +1,3 @@
-// src/services/CidadeService.js
 import { api } from '../boot/axios'
 
 export const Cidade = {
@@ -14,7 +13,6 @@ export const Cidade = {
   async getCidadesAll() {
     try {
       const cidades = await api.get('/cidade')
-      console.log(cidades.data) // DEBUG
       return cidades.data
     } catch (err) {
       throw err

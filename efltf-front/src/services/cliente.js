@@ -1,4 +1,3 @@
-// src/services/ClienteService.js
 import { api } from '../boot/axios'
 
 export const Cliente = {
@@ -14,7 +13,6 @@ export const Cliente = {
   async getClientesAll() {
     try {
       const clientes = await api.get('/cliente')
-      console.log(clientes.data) // DEBUG
       return clientes.data
     } catch (err) {
       throw err

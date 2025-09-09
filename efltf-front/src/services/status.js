@@ -1,4 +1,3 @@
-// src/services/StatusService.js
 import { api } from '../boot/axios'
 
 export const Status = {
@@ -14,7 +13,6 @@ export const Status = {
   async getStatusAll() {
     try {
       const statuses = await api.get('/status')
-      console.log(statuses.data) // DEBUG
       return statuses.data
     } catch (err) {
       throw err

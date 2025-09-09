@@ -39,10 +39,10 @@ const formFields = [
 ]
 
 const columns = [
-  { name: 'id',       label: 'Código',  field: 'id' },
-  { name: 'nome',     label: 'Cidade',  field: 'nome' },
-  { name: 'deslocamento', label: 'Tempo deslocamento',      field: 'deslocamento' },
-  { name: 'uf_sigla', label: 'UF',      field: 'uf_sigla' },
-  { name: 'uf_nome',  label: 'UF Nome', field: 'uf_nome' }
+  { name: 'id', label: 'Código', field: 'id' },
+  { name: 'nome', label: 'Cidade', field: 'nome' },
+  { name: 'deslocamento', label: 'Tempo deslocamento', field: 'deslocamento' },
+  { name: 'uf_sigla', label: 'UF', field: 'uf_sigla' },
+  { name: 'uf_nome', label: 'UF Nome', field: 'uf_nome' }
 ]
 </script>

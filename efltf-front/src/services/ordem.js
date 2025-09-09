@@ -14,7 +14,6 @@ export const Ordem = {
   async getOrdensAll() {
     try {
       const ordens = await api.get('/ordem')
-      console.log(ordens.data) // DEBUG
       return ordens.data
     } catch (err) {
       throw err
@@ -24,7 +23,6 @@ export const Ordem = {
   async createOrdem(data) {
     try {
       const ret = await api.post('/ordem', data)
-      console.log(ret.data) // DEBUG
       return ret.data
     } catch (err) {
       throw err

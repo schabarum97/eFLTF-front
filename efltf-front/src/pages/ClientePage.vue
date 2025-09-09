@@ -21,11 +21,11 @@ const formFields = [
 ]
 
 const columns = [
-  { name: 'id',   label: 'Código',  field: 'id' },
-  { name: 'cnpj', label: 'CPF/CNPJ',    field: 'cnpj' },
-  { name: 'nome', label: 'Nome',    field: 'nome' },
-  { name: 'ddi',  label: 'DDI',     field: 'ddi' },
-  { name: 'ddd',  label: 'DDD',     field: 'ddd' },
+  { name: 'id', label: 'Código', field: 'id' },
+  { name: 'cnpj', label: 'CPF/CNPJ', field: 'cnpj' },
+  { name: 'nome', label: 'Nome', field: 'nome' },
+  { name: 'ddi', label: 'DDI', field: 'ddi' },
+  { name: 'ddd', label: 'DDD', field: 'ddd' },
   { name: 'fone', label: 'Telefone',field: 'fone' }
 ]
 </script>

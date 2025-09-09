@@ -112,10 +112,10 @@ const formFields = [
     }
   },
   { model: 'cli_logradouro', label: 'Logradouro',  type: 'text', required: true, maxlength: 200 },
-  { model: 'cli_numero',     label: 'Número',      type: 'text', maxlength: 20 },
-  { model: 'cli_bairro',     label: 'Bairro',      type: 'text', maxlength: 120 },
-  { model: 'cli_endereco',   label: 'Complemento', type: 'text', maxlength: 200 },
-  { model: 'cli_cep',        label: 'CEP',         type: 'text', maxlength: 9 },
+  { model: 'cli_numero', label: 'Número',  type: 'text', maxlength: 20 },
+  { model: 'cli_bairro', label: 'Bairro', type: 'text', maxlength: 120 },
+  { model: 'cli_endereco', label: 'Complemento', type: 'text', maxlength: 200 },
+  { model: 'cli_cep', label: 'CEP', type: 'text', maxlength: 9 },
   {
     model: 'cli_ativo',
     label: 'Ativo',
@@ -129,14 +129,14 @@ const formFields = [
 ]
 
 const columns = [
-  { name: 'id',         label: 'Código',     field: 'id' },
-  { name: 'cliente',    label: 'Cliente',    field: 'cliente_nome' },
-  { name: 'cidade',     label: 'Cidade',     field: 'cidade_nome' },
+  { name: 'id', label: 'Código', field: 'id' },
+  { name: 'cliente', label: 'Cliente', field: 'cliente_nome' },
+  { name: 'cidade', label: 'Cidade', field: 'cidade_nome' },
   { name: 'logradouro', label: 'Logradouro', field: 'logradouro' },
-  { name: 'numero',     label: 'Número',     field: 'numero' },
-  { name: 'bairro',     label: 'Bairro',     field: 'bairro' },
-  { name: 'endereco',   label: 'Compl.',     field: 'endereco' },
-  { name: 'cep',        label: 'CEP',        field: 'cep' },
-  { name: 'ativo',      label: 'Ativo',      field: 'ativo' }
+  { name: 'numero', label: 'Número', field: 'numero' },
+  { name: 'bairro', label: 'Bairro', field: 'bairro' },
+  { name: 'endereco', label: 'Compl.', field: 'endereco' },
+  { name: 'cep', label: 'CEP', field: 'cep' },
+  { name: 'ativo', label: 'Ativo', field: 'ativo' }
 ]
 </script>

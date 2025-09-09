@@ -11,21 +11,14 @@
           @click="toggleLeftDrawer"
         />
 
-        <!-- Título + breadcrumbs -->
+        <!-- Título -->
         <div class="column">
           <q-toolbar-title class="text-h6 q-pa-none">{{ pageTitle }}</q-toolbar-title>
           <q-breadcrumbs class="text-white text-caption" active-color="white" gutter="xs">
             <q-breadcrumbs-el v-for="(bc, i) in breadcrumbs" :key="i" :label="bc" />
           </q-breadcrumbs>
         </div>
-
         <q-space />
-
-        <!-- Ações do header -->
-        <q-btn flat dense round icon="refresh" @click="refreshRoute">
-          <q-tooltip>Recarregar página</q-tooltip>
-        </q-btn>
-        <q-btn flat dense round :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="toggleDark" />
       </q-toolbar>
     </q-header>
 
@@ -158,7 +151,7 @@ const $q = useQuasar()
 const route = useRoute()
 const router = useRouter()
 
-// Título e breadcrumbs
+// Título
 const pageTitle = computed(() =>
   route.matched.at(-1)?.meta?.title || route.name || 'eFLTF'
 )
@@ -170,11 +163,10 @@ const breadcrumbs = computed(() =>
     .filter(Boolean)
 )
 
-// Drawer + mini-mode no desktop
+// Drawer
 const leftDrawerOpen = ref(false)
-const miniState = ref($q.screen.gt.sm) // mini quando desktop
+const miniState = ref($q.screen.gt.sm)
 function toggleLeftDrawer () {
-  // no desktop, alterna mini; no mobile, abre/fecha normal
   if ($q.screen.gt.sm) miniState.value = !miniState.value
   else leftDrawerOpen.value = !leftDrawerOpen.value
 }
@@ -182,7 +174,6 @@ function toggleLeftDrawer () {
 function go (to) {
   if (!to) return
   if (route.path !== to) router.push(to)
-  // fecha apenas no mobile
   if (!$q.screen.gt.sm) leftDrawerOpen.value = false
 }
 
@@ -191,32 +182,24 @@ function isActive (to) {
   return route.path === to || route.path.startsWith(to + '/')
 }
 
-function refreshRoute () {
-  router.replace({ path: '/_refresh' }).then(() => router.replace(route.fullPath))
-}
-
-function toggleDark () {
-  $q.dark.set(!$q.dark.isActive)
-}
-
 // links
 const systemLinks = {
   consultas: [
-    { title: 'Consulta Usuários', icon: 'person_search', link: '/consultas/usuarios' },
-    { title: 'Consulta Pedidos',  icon: 'assignment',     link: '/consultas/pedidos' },
-    { title: 'Consulta Produtos', icon: 'inventory',      link: '/consultas/produtos' }
+    { title: 'Consulta Ordens', icon: 'person_search', link: '/consultaordem' },
+    { title: 'Consulta Pagamentos', icon: 'account_balance_wallet', link: '/consultapagamento' }
   ],
   cadastros: [
-    { title: 'UF',    icon: 'public', link: '/uf' },
-    { title: 'Status',  icon: 'flag', link: '/status' },
-    { title: 'Cidade',  icon: 'location_city', link: '/cidade' },
-    { title: 'Cliente',  icon: 'people', link: '/cliente' },
-    { title: 'Endereço',  icon: 'place', link: '/endereco' },
-    { title: 'Ordem',  icon: 'receipt_long', link: '/ordem' }
+    { title: 'UF', icon: 'public', link: '/uf' },
+    { title: 'Status', icon: 'flag', link: '/status' },
+    { title: 'Cidade', icon: 'location_city', link: '/cidade' },
+    { title: 'Cliente', icon: 'people', link: '/cliente' },
+    { title: 'Endereço', icon: 'place', link: '/endereco' },
+    { title: 'Forma de pagamento', icon: 'credit_card', link: '/formapag' },
+    { title: 'Ordem Full', icon: 'receipt_long', link: '/ordemfull' }
   ],
   agenda: [
-    { title: 'Agenda Reuniões',   icon: 'event',          link: '/agenda/reunioes' },
-    { title: 'Agenda Entregas',   icon: 'local_shipping', link: '/agenda/entregas' }
+    { title: 'Agenda Reuniões', icon: 'event', link: '/agenda/reunioes' },
+    { title: 'Agenda Entregas', icon: 'local_shipping', link: '/agenda/entregas' }
   ]
 }
 </script>
@@ -225,19 +208,16 @@ const systemLinks = {
 .bg-dark-green { background-color: #1b3a2a; }
 .q-page-container { padding: 16px; }
 
-/* Cabeçalho das seções do menu (mais contraste e alinhamento) */
 .section-header {
   color: #1b3a2a;
   font-weight: 600;
 }
 
-/* Link ativo no menu */
 .active-link {
   background: rgba(27, 58, 42, 0.08);
   border-left: 3px solid #1b3a2a;
 }
 
-/* mini drawer: centraliza ícone quando estiver mini */
 :deep(.q-drawer--mini) .q-item__section--avatar + .q-item__section {
   display: none;
 }

@@ -13,7 +13,6 @@ export const Endereco = {
   async getEnderecosAll() {
     try {
       const enderecos = await api.get('/endereco')
-      console.log(enderecos.data) // DEBUG
       return enderecos.data
     } catch (err) {
       throw err

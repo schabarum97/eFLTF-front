@@ -13,7 +13,6 @@ export const Uf = {
   async getUfs() {
     try {
       const ufs = await api.get('/uf')
-      console.log(ufs.data) // DEBUG
       return ufs.data
     } catch (err) {
       throw err
