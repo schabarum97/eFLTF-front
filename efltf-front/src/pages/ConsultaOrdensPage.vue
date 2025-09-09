@@ -25,7 +25,8 @@ import { Endereco } from 'src/services/EnderecoService.js'
 import { Cidade }   from 'src/services/CidadeService.js'
 import { Uf }       from 'src/services/UfService.js'
 import { Status }   from 'src/services/StatusService.js'
-import StatusDialog from 'src/components/StatusDialog.vue' // <-- default import (sem {})
+import { Veiculo } from 'src/services/VeiculoService'
+import StatusDialog from 'src/components/StatusDialog.vue'
 
 const router = useRouter()
 const $q = useQuasar()
@@ -88,6 +89,15 @@ const filterFields = ref([
   },
 
   {
+    model: 'vei_id', label: 'Veículo', type: 'lookup',
+    optionLabel: 'label', optionValue: 'value',
+    async fetchOptions (term) {
+      const { items } = await Veiculo.getAll({ q: term })
+      return (items || []).map(v => ({ label: `${v.placa} – ${v.modelo}`, value: v.id }))
+    }
+  },
+
+  {
     model: 'data', label: 'Data', type: 'date',
     format: 'YYYY-MM-DD',
     displayFormat: 'DD/MM/YYYY'
@@ -112,7 +122,8 @@ const columns = [
   { name: 'data', label: 'Data', field: 'data', sortable: true, type: 'date', displayFormat: 'DD/MM/YYYY' },
   { name: 'hora', label: 'Hora', field: 'hora', sortable: true },
   { name: 'responsavel_nome', label: 'Responsável', field: 'responsavel_nome', sortable: true },
-  { name: 'observacao', label: 'Observação', field: 'observacao', sortable: false }
+  { name: 'observacao', label: 'Observação', field: 'observacao', sortable: false },
+  { name: 'veiculo', label: 'Veículo', field: r => r.veiculo_placa ? `${r.veiculo_placa} — ${r.veiculo_modelo}` : '', sortable: false}
 ]
 
 const rowActions = [

@@ -225,6 +225,29 @@
                 </template>
               </q-select>
 
+              <q-select
+                class="col-12 col-sm-6"
+                v-model="ordemForm.vei_id"
+                label="Veículo"
+                use-input
+                input-debounce="300"
+                :options="veiculoLookupOptions"
+                :option-label="o => o?.label ?? ''"
+                :option-value="o => o?.value ?? null"
+                emit-value
+                map-options
+                dense
+                outlined
+                clearable
+                :loading="ui.loading.veiculo"
+                @filter="filterVeiculo"
+              >
+                <template #prepend><q-icon name="local_shipping" /></template>
+                <template #no-option>
+                  <q-item><q-item-section class="text-grey">Sem resultados</q-item-section></q-item>
+                </template>
+              </q-select>
+
               <!-- Data em DD/MM/YYYY -->
               <q-input class="col-6 col-sm-3" v-model="ordemForm.dataBR" label="Data" dense outlined readonly clearable>
                 <template #prepend><q-icon name="event" /></template>
@@ -472,6 +495,7 @@ import { Ordem } from 'src/services/OrdemService'
 import { FormaPag } from 'src/services/FormaPagService'
 import { OrdemPag } from 'src/services/OrdemPagService'
 import { Responsavel } from 'src/services/ResponsavelService'
+import { Veiculo } from 'src/services/VeiculoService'
 
 /* (ISO -> BR */
 function isoToBR (iso) {
@@ -552,12 +576,15 @@ function apiOrdemToForm (o = {}) {
     end_id: o.end_id ?? null,
     stt_id: o.stt_id ?? o.status_id ?? null,
     usu_id: o.usu_id ?? o.responsavel_id ?? null,
+    vei_id: o.vei_id != null ? Number(o.vei_id) : null,
     observacao: o.observacao ?? o.descricao ?? '',
     data: o.data ?? null,
     hora: o.hora ?? null,
     cliente_nome: o.cliente_nome ?? '',
     status_nome:  o.status_nome ?? o.stt_nome ?? '',
-    responsavel_nome: o.responsavel_nome ?? o.usu_nome ?? ''
+    responsavel_nome: o.responsavel_nome ?? o.usu_nome ?? '',
+    veiculo_placa:  o.veiculo_placa ?? '', 
+    veiculo_modelo: o.veiculo_modelo ?? ''
   }
 }
 function formOrdemToApi (f = {}) {
@@ -567,6 +594,7 @@ function formOrdemToApi (f = {}) {
     end_id: f.end_id,
     stt_id: f.stt_id,
     usu_id: f.usu_id,
+    vei_id: f.vei_id != null ? Number(f.vei_id) : null,
     observacao: (f.observacao || '').trim(),
     data: f.data || null,
     hora: f.hora || null
@@ -588,7 +616,16 @@ export default {
         cli_endereco: '', cli_cep: '', cli_ativo: 'S'
       },
 
-      ordemForm: { id: null, cli_id: null, end_id: null, stt_id: null, usu_id: null, observacao: '', data: null, dataBR: null, hora: null },
+      ordemForm: { id: null, 
+                   cli_id: null, 
+                   end_id: null, 
+                   stt_id: null, 
+                   usu_id: null, 
+                   vei_id: null,
+                   observacao: '', 
+                   data: null, 
+                   dataBR: null, 
+                   hora: null },
 
       // PAGAMENTOS
       pagamentoForm: {
@@ -612,6 +649,7 @@ export default {
       ufOptions: [],
       formaPagOptions: [],
       responsavelLookupOptions: [],
+      veiculoLookupOptions: [],
 
       ui: {
         loading: {
@@ -621,6 +659,7 @@ export default {
           uf: false,
           status: false,
           responsavel: false,
+          veiculo: false,
           savingAll: false,
           savingEndereco: false
         },
@@ -652,7 +691,8 @@ export default {
         { name: 'status_nome',      label: 'Status',        field: 'status_nome', align: 'left' },
         { name: 'data',             label: 'Data',          field: r => isoToBR(r.data), align: 'left' },
         { name: 'hora',             label: 'Hora',          field: 'hora', align: 'left' },
-        { name: 'responsavel_nome', label: 'Responsável',   field: 'responsavel_nome', align: 'left' }
+        { name: 'responsavel_nome', label: 'Responsável',   field: 'responsavel_nome', align: 'left' },
+        { name: 'veiculo', label: 'Veículo', field: r => `${r.veiculo_placa ?? ''} ${r.veiculo_modelo ? '— ' + r.veiculo_modelo : ''}`, align: 'left' },
       ],
 
       // colunas pagamentos
@@ -809,6 +849,36 @@ export default {
       try {
         const { items } = await Responsavel.getAll()
         this.responsavelLookupOptions = (items || []).map(r => ({ label: `${r.id} — ${r.nome}`, value: r.id }))
+      } catch {}
+    },
+
+    async filterVeiculo (val, update, abort) {
+      this.ui.loading.veiculo = true
+      try {
+        const { items } = await Veiculo.getAll()
+        const list = (items || [])
+          .filter(v =>
+            !val ||
+            String(v.placa ?? '').toLowerCase().includes(String(val).toLowerCase()) ||
+            String(v.modelo ?? '').toLowerCase().includes(String(val).toLowerCase()) ||
+            String(v.marca ?? '').toLowerCase().includes(String(val).toLowerCase())
+          )
+          .map(v => ({
+            label: `${v.placa ?? ''} — ${v.modelo ?? ''}${v.marca ? ' (' + v.marca + ')' : ''}`,
+            value: Number(v.id) // <<< força Number
+          }))
+        update(() => { this.veiculoLookupOptions = list })
+      } catch (e) { console.error(e); abort() }
+      finally { this.ui.loading.veiculo = false }
+    },
+
+    async loadVeiculosOptionsInit () {
+      try {
+        const { items } = await Veiculo.getAll()
+        this.veiculoLookupOptions = (items || []).map(v => ({
+          label: `${v.placa ?? ''} — ${v.modelo ?? ''}${v.marca ? ' (' + v.marca + ')' : ''}`,
+          value: Number(v.id)
+        }))
       } catch {}
     },
 
@@ -1049,6 +1119,16 @@ export default {
           ]
         } catch {}
       }
+
+      if (this.ordemForm.vei_id && !this.veiculoLookupOptions.find(o => Number(o.value) === Number(this.ordemForm.vei_id))) {
+        try {
+          const r = await Veiculo.getVeiculo(this.ordemForm.vei_id).then(x => x.item)
+          if (r) this.veiculoLookupOptions = [
+            ...this.veiculoLookupOptions,
+            { label: `${r.placa ?? ''} — ${r.modelo ?? ''}${r.marca ? ' (' + r.marca + ')' : ''}`, value: Number(r.id) }
+          ]
+        } catch {}
+      }
     },
 
     // Pagamentos (OS)
@@ -1145,7 +1225,7 @@ export default {
       this.enderecoForm = { id: null, cli_id: this.clienteForm.id ?? null, cid_id: null, uf_id: null, cli_logradouro: '', cli_numero: '', cli_bairro: '', cli_endereco: '', cli_cep: '', cli_ativo: 'S' }
       if (!keepUfCityLists) this.cidadeLookupOptions = []
     },
-    clearOS () { this.ordemForm = { id: null, cli_id: this.clienteForm.id ?? null, end_id: null, stt_id: null, observacao: '', data: null, dataBR: null, hora: null } },
+    clearOS () { this.ordemForm = { id: null, cli_id: this.clienteForm.id ?? null, end_id: null, stt_id: null, usu_id: null, vei_id: null, observacao: '', data: null, dataBR: null, hora: null } },
     clearAll () { this.clearOS(); this.clearEndereco(); this.clearCliente(); this.clearPagamentoForm(); this.pagamentos.items = [] },
 
     updateHeaderOffset () {
@@ -1229,7 +1309,8 @@ export default {
     await Promise.all([this.fetchOrdens(), 
                        this.loadUfs(), 
                        this.loadFormaPagOptionsInit(), 
-                       this.loadResponsaveisOptionsInit()])
+                       this.loadResponsaveisOptionsInit(),
+                       this.loadVeiculosOptionsInit()])
     this.updateHeaderOffset()
     window.addEventListener('resize', this.updateHeaderOffset)
     await this.handleDeepLink()
