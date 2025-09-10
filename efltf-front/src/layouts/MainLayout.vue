@@ -200,7 +200,8 @@ const systemLinks = {
     { title: 'Ordem Serviço', icon: 'receipt_long', link: '/ordemfull' }
   ],
   agenda: [
-    { title: 'Agenda de serviços', icon: 'local_shipping', link: '/servicos' }
+    { title: 'Agenda de serviços', icon: 'local_shipping', link: '/servicos' },
+    { title: 'Disponibilidade de veículos', icon: 'local_shipping', link: '/disponibilidade' }
   ]
 }
 </script>

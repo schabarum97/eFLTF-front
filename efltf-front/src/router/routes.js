@@ -16,6 +16,7 @@ const routes = [
       { path: 'consultaordem', name: 'consultaordem', component: () => import('pages/ConsultaOrdensPage.vue'), meta: { title: 'Consulta de Ordens' } },
       { path: 'consultapagamento', name: 'consultapagamento', component: () => import('pages/OrdemPagConsultaPage.vue'), meta: { title: 'Consulta de Pagamentos' } },
       { path: 'servicos', name: 'servicos', component: () => import('pages/CalendarOrdensPage.vue'), meta: { title: 'Agenda de Servicos' } },
+      { path: 'disponibilidade', name: 'disponibilidade', component: () => import('pages/DisponibilidadeVeiculosPage.vue'), meta: { title: 'Disponibilidade veículos' } },
     ]
   },
 

@@ -998,7 +998,7 @@ export default {
         this.clearAll()
       } catch (e) {
         console.error(e)
-        this.$q.notify({ type: 'negative', message: 'Erro ao salvar tudo', position: 'top-right' })
+        this.$q.notify({ type: 'negative', message: 'Erro ao salvar tudo ' + e.response.data, position: 'top-right' })
       } finally { this.ui.loading.savingAll = false }
     },
 
