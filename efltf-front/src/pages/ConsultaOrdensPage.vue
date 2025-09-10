@@ -23,10 +23,10 @@ import { Ordem }    from 'src/services/OrdemService.js'
 import { Cliente }  from 'src/services/ClienteService.js'
 import { Endereco } from 'src/services/EnderecoService.js'
 import { Cidade }   from 'src/services/CidadeService.js'
-import { Uf }       from 'src/services/UfService.js'
 import { Status }   from 'src/services/StatusService.js'
-import { Veiculo } from 'src/services/VeiculoService'
+import { Veiculo }  from 'src/services/VeiculoService.js'
 import StatusDialog from 'src/components/StatusDialog.vue'
+import { Responsavel } from 'src/services/ResponsavelService.js'
 
 const router = useRouter()
 const $q = useQuasar()
@@ -39,7 +39,6 @@ const OrdemService = {
 }
 
 const statusOptions = ref([])
-const ufOptions = ref([])
 
 const filterFields = ref([
   { model: 'id', label: 'ID', type: 'number' },
@@ -83,9 +82,12 @@ const filterFields = ref([
   },
 
   {
-    model: 'uf_sigla', label: 'UF', type: 'select',
+    model: 'responsavel_id', label: 'Responsável', type: 'lookup',
     optionLabel: 'label', optionValue: 'value',
-    options: ufOptions.value
+    async fetchOptions (term) {
+      const { items } = await Responsavel.getAll({ q: term })
+      return (items || []).map(c => ({ label: `${c.id} – ${c.nome}`, value: c.id }))
+    }
   },
 
   {
@@ -136,7 +138,7 @@ const rowActions = [
     }
   },
   {
-    label: 'Alterar status',
+    label: 'Alterar dados OS',
     icon: 'published_with_changes',
     color: 'grey-8',
     show: () => true,
@@ -145,17 +147,20 @@ const rowActions = [
         component: StatusDialog,
         componentProps: {
           ordemId: Number(row.id),
-          currentStatusId: row.stt_id
+          currentStatusId: row.stt_id ?? null,
+          currentResponsavelId: row.responsavel_id ?? null,
+          currentVeiculoId: row.vei_id ?? null,
+          currentObservacao: row.observacao ?? ''
         }
       })
-      .onOk(async ({ id, stt_id }) => {
+      .onOk(async ({ id, stt_id, usu_id, vei_id, observacao }) => {
         try {
-          await Ordem.update({ id, stt_id }) // ajuste se seu service usa assinatura diferente
-          $q.notify({ type: 'positive', message: `Status da OS #${id} atualizado.` })
+          await Ordem.update({ id, stt_id, usu_id, vei_id, observacao })
+          $q.notify({ type: 'positive', message: `OS #${id} atualizada.` })
           consultaRef.value?.reload?.()
         } catch (err) {
           console.error(err)
-          $q.notify({ type: 'negative', message: 'Erro ao atualizar status. ' + (err?.response?.data || err?.message || '') })
+          $q.notify({ type: 'negative', message: 'Erro ao atualizar OS. ' + (err?.response?.data || err?.message || '') })
         }
       })
     }
@@ -167,13 +172,8 @@ onMounted(async () => {
     const st = await Status.getAll()
     statusOptions.value = (st.items || []).map(s => ({ label: s.nome, value: s.id }))
 
-    const uf = await Uf.getAll()
-    ufOptions.value = (uf.items || []).map(u => ({ label: `${u.sigla} – ${u.nome}`, value: u.sigla }))
-
     const stField = filterFields.value.find(f => f.model === 'stt_id')
     if (stField) stField.options = statusOptions.value
-    const ufField = filterFields.value.find(f => f.model === 'uf_sigla')
-    if (ufField) ufField.options = ufOptions.value
   } catch (e) {
     console.warn('Falha ao carregar opções de Status/UF:', e?.response?.data || e?.message)
   }
