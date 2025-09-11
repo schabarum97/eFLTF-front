@@ -429,7 +429,6 @@
                 <div class="row items-center no-wrap q-gutter-xs">
                   <q-btn flat dense round icon="refresh" @click="fetchOrdens"><q-tooltip>Recarregar</q-tooltip></q-btn>
                   <q-btn flat dense round icon="density_small" @click="() => { dense = !dense; updateHeaderOffset(); }"><q-tooltip>{{ dense ? 'Espaçamento padrão' : 'Modo denso' }}</q-tooltip></q-btn>
-                  <q-btn flat dense round icon="menu" />
                 </div>
               </div>
             </template>
@@ -442,6 +441,9 @@
                 </q-btn>
                 <q-btn round dense flat icon="delete" color="negative" aria-label="Excluir" @click="confirmDelete(scope.row.id)">
                   <q-tooltip>Excluir</q-tooltip>
+                </q-btn>
+                <q-btn round dense flat icon="local_printshop" color="grey-8" aria-label="Imprimir OS" @click="ImprimirOS(scope.row)">
+                  <q-tooltip>Imprimir OS</q-tooltip>
                 </q-btn>
               </q-td>
             </template>
@@ -729,6 +731,14 @@ export default {
     }
   },
   methods: {
+    ImprimirOS (row) {
+      const id = row?.id ?? row?.ordem_id ?? row?.ord_id
+      if (!id) {
+        this.$q.notify({ type: 'warning', message: 'ID da OS não encontrado', position: 'top-right' })
+        return
+      }
+      this.$router.push({ name: 'report', query: { ord_id: Number(id) } })
+    },
     // regras
     req: v => (String(v ?? '').trim().length > 0) || 'Campo obrigatório',
     reqIfNewEndereco (v) { if (this.enderecoForm.id) return true; return (String(v ?? '').trim().length > 0) || 'Campo obrigatório' },
@@ -1330,6 +1340,12 @@ function formatEnderecoLabel (e = {}) {
   const bai = e.bairro     ?? e.end_bairro     ?? e.cli_bairro     ?? ''
   return `${id} – ${log}${num ? ', ' + num : ''}${bai ? ' - ' + bai : ''}`.trim()
 }
+
+function ImprimirOS (row) {
+  router.push({ name: 'ordemfull', query: { ord_id: row.ordem_id } })
+}
+      
+
 </script>
 
 <style scoped>

@@ -138,6 +138,14 @@ const rowActions = [
     }
   },
   {
+    label: 'Imprimir OS',
+    icon: 'local_printshop',
+    color: 'grey-8',
+    handler: (row) => {
+      router.push({ name: 'report', query: { ord_id: row.id } })
+    }
+  },
+  {
     label: 'Alterar dados OS',
     icon: 'published_with_changes',
     color: 'grey-8',
