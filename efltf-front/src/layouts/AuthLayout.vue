@@ -25,7 +25,6 @@ import { useQuasar } from 'quasar'
 const $q = useQuasar()
 const route = useRoute()
 
-// auth pages: colocamos meta: { authPage: true } nas rotas de /login e /signup
 const isAuthPage = computed(() => route.meta?.authPage === true)
 
 </script>
@@ -35,13 +34,10 @@ const isAuthPage = computed(() => route.meta?.authPage === true)
   min-height: 100vh;
 }
 
-/* Fundo especial nas telas de auth */
 .auth-bg {
-  /* gradiente suave; usa primary por padrão */
   background: linear-gradient(135deg, var(--q-primary) 0%, #4f46e5 50%, #0ea5e9 100%);
 }
 
-/* ajuste para dark mode em auth */
 :deep(body.body--dark) .auth-bg {
   background: linear-gradient(135deg, #0b1020 0%, #141a2f 50%, #0e7490 100%);
 }
