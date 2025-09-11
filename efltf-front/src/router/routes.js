@@ -20,7 +20,20 @@ const routes = [
       { path: 'report', name: 'report', component: () => import('pages/ReportOsPage.vue'), meta: { title: 'Report OS' } },
     ]
   },
-
+  {
+    path: '/signup',
+    component: () => import('src/layouts/AuthLayout.vue'),
+    children: [
+      { path: '', component: () => import('src/pages/AuthSignupPage.vue') }
+    ]
+  },
+  {
+    path: '/login',
+    component: () => import('src/layouts/AuthLayout.vue'),
+    children: [
+      { path: '', component: () => import('src/pages/AuthLoginPage.vue') }
+    ]
+  },
   {
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue')

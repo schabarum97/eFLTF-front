@@ -19,6 +19,17 @@
           </q-breadcrumbs>
         </div>
         <q-space />
+
+        <q-btn
+          flat dense no-caps
+          class="text-white q-ml-xs"
+          icon="logout"
+          label="Sair"
+          :loading="loggingOut"
+          @click="onLogout"
+        >
+          <q-tooltip>Sair</q-tooltip>
+        </q-btn>
       </q-toolbar>
     </q-header>
 
@@ -51,7 +62,6 @@
 
           <q-separator spaced />
 
-          <!-- ====== CONSULTAS (grupo vivo) ====== -->
           <div class="group-block">
             <q-expansion-item
               expand-icon="expand_more"
@@ -80,7 +90,6 @@
             </q-expansion-item>
           </div>
 
-          <!-- ====== CADASTROS (grupo vivo) ====== -->
           <div class="group-block">
             <q-expansion-item
               expand-icon="expand_more"
@@ -108,7 +117,6 @@
             </q-expansion-item>
           </div>
 
-          <!-- ====== AGENDA (grupo vivo) ====== -->
           <div class="group-block">
             <q-expansion-item
               expand-icon="expand_more"
@@ -151,14 +159,28 @@
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
+import { Auth } from 'src/services/AuthService.js'
 
 defineOptions({ name: 'MainLayout' })
 
 const $q = useQuasar()
 const route = useRoute()
 const router = useRouter()
+const loggingOut = ref(false)
 
-// Título
+async function onLogout () {
+  loggingOut.value = true
+  try {
+    await Auth.logout()
+    $q.notify({ type: 'positive', message: 'Sessão encerrada.' })
+    router.replace('/login')
+  } catch (e) {
+    $q.notify({ type: 'negative', message: 'Falha ao encerrar sessão.' })
+  } finally {
+    loggingOut.value = false
+  }
+}
+
 const pageTitle = computed(() =>
   route.matched.at(-1)?.meta?.title || route.name || 'eFLTF'
 )
@@ -215,11 +237,9 @@ const systemLinks = {
 </script>
 
 <style scoped>
-/* ====== Header ====== */
 .bg-dark-green { background-color: #1b3a2a; }
 .q-page-container { padding: 16px; }
 
-/* Remove qualquer “hairline” e dá uma sombra mais bonita */
 .app-header {
   border-bottom: 0 !important;
   box-shadow: 0 2px 8px rgba(0,0,0,.18);
@@ -228,24 +248,20 @@ const systemLinks = {
   border-bottom: 0;
 }
 
-/* ====== Drawer links ====== */
 .section-header {
   color: #1b3a2a;
   font-weight: 600;
 }
 
-/* Itens ativos com faixinha à esquerda */
 .active-link {
   background: rgba(27, 58, 42, 0.08);
   border-left: 3px solid #1b3a2a;
 }
 
-/* Mini: esconde texto mantendo só o ícone */
 :deep(.q-drawer--mini) .q-item__section--avatar + .q-item__section {
   display: none;
 }
 
-/* ====== “Blocos vivos” (cards dos grupos) ====== */
 .group-block {
   margin: 8px 12px;
   border-radius: 12px;
@@ -255,25 +271,22 @@ const systemLinks = {
   overflow: hidden;
 }
 
-/* Cabeçalho do grupo */
 .group-header {
   color: #1b3a2a;
   font-weight: 700;
   background: linear-gradient(180deg, #f9fafb, #f2f4f7);
 }
 
-/* Quando expandido, reforça o “grupo vivo” */
 :deep(.q-expansion-item--expanded) .group-header {
   background: #eef6f1;
   border-bottom: 1px dashed #c9d8d0;
 }
 
-/* Conteúdo do grupo (itens) */
 .group-content {
   padding: 4px 0;
 }
 .group-content .q-item {
-  padding-left: 48px; /* dá respiro para alinhar com o ícone do header */
+  padding-left: 48px; 
 }
 .group-content .q-item:hover {
   background: #f5f9f7;
