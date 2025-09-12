@@ -154,10 +154,6 @@ import { Report } from 'src/services/ReportService'
 
 import DefaultLogo from 'src/assets/LOGO.png'
 
-/**
- * ATUALIZAÇÃO: troca "as: 'url'" por "query: '?url', import: 'default'"
- * para eliminar o warning de depreciação do Vite.
- */
 const ASSET_URLS = import.meta.glob(
   'src/assets/**/*.{png,jpg,jpeg,svg,webp}',
   { eager: true, query: '?url', import: 'default' }
