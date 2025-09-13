@@ -144,6 +144,35 @@
             </q-expansion-item>
           </div>
 
+          <div class="group-block">
+            <q-expansion-item
+              expand-icon="expand_more"
+              default-opened
+              dense
+              expand-separator
+              header-class="group-header"
+              content-class="group-content"
+            >
+              <template #header>
+                <q-item-section avatar><q-icon name="support_agent" /></q-item-section>
+                <q-item-section>Bot WhatsApp</q-item-section>
+              </template>
+
+              <q-item
+                v-for="link in systemLinks.wpp"
+                :key="link.title"
+                clickable v-ripple
+                :active="isActive(link.link)"
+                active-class="active-link"
+                @click="go(link.link)"
+              >
+                <q-item-section avatar><q-icon :name="link.icon" /></q-item-section>
+                <q-item-section>{{ link.title }}</q-item-section>
+              </q-item>
+            </q-expansion-item>
+          </div>
+
+
         </q-list>
       </q-scroll-area>
     </q-drawer>
@@ -192,7 +221,6 @@ const breadcrumbs = computed(() =>
     .filter(Boolean)
 )
 
-// Drawer
 const leftDrawerOpen = ref(false)
 const miniState = ref($q.screen.gt.sm)
 function toggleLeftDrawer () {
@@ -227,11 +255,16 @@ const systemLinks = {
     { title: 'Forma de pagamento', icon: 'credit_card', link: '/formapag' },
     { title: 'Responsável', icon: 'person', link: '/responsavel' },
     { title: 'Veículo', icon: 'directions_car', link: '/veiculo' },
+    { title: 'Tipo de local de prestação', icon: 'apartment', link: '/tipolocal' },
     { title: 'Ordem Serviço', icon: 'receipt_long', link: '/ordemfull' }
   ],
   agenda: [
     { title: 'Agenda de serviços', icon: 'schedule', link: '/servicos' },
     { title: 'Disponibilidade de veículos', icon: 'local_shipping', link: '/disponibilidade' }
+  ],
+  wpp: [
+    { title: 'Conectar WathsApp-Web', icon: 'qr_code_scanner', link: '/wpp' },
+    { title: 'Mock WathsApp-Web', icon: 'terminal', link: '/mock' }
   ]
 }
 </script>

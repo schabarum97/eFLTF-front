@@ -18,6 +18,9 @@ const routes = [
       { path: 'servicos', name: 'servicos', component: () => import('pages/CalendarOrdensPage.vue'), meta: { title: 'Agenda de Servicos' } },
       { path: 'disponibilidade', name: 'disponibilidade', component: () => import('pages/DisponibilidadeVeiculosPage.vue'), meta: { title: 'Disponibilidade veículos' } },
       { path: 'report', name: 'report', component: () => import('pages/ReportOsPage.vue'), meta: { title: 'Report OS' } },
+      { path: 'wpp', name: 'wpp', component: () => import('pages/WppConnectPage.vue'), meta: { title: 'Conectar Wpp-web' } },
+      { path: 'mock', name: 'mock', component: () => import('pages/ChatMockPage.vue'), meta: { title: 'Mock Wpp-web' } },
+      { path: 'tipolocal', name: 'tipolocal', component: () => import('pages/TipoLocalPage.vue'), meta: { title: 'Tipo de local de prestação' } },
     ]
   },
   {
