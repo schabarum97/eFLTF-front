@@ -1,6 +1,5 @@
 import { api } from '../boot/axios'
 
-// encoder robusto pra UTF-8 -> base64
 function base64Utf8 (str) {
   const bytes = new TextEncoder().encode(str)
   let bin = ''

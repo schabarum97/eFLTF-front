@@ -248,6 +248,29 @@
                 </template>
               </q-select>
 
+              <q-select
+                class="col-12 col-sm-6"
+                v-model="ordemForm.tpl_id"
+                label="Tipo de Local"
+                use-input
+                input-debounce="300"
+                :options="tipoLocalLookupOptions"
+                :option-label="o => o?.label ?? ''"
+                :option-value="o => o?.value ?? null"
+                emit-value
+                map-options
+                dense
+                outlined
+                clearable
+                :loading="ui.loading.tipoLocal"
+                @filter="filterTipoLocal"
+              >
+                <template #prepend><q-icon name="business" /></template>
+                <template #no-option>
+                  <q-item><q-item-section class="text-grey">Sem resultados</q-item-section></q-item>
+                </template>
+              </q-select>
+
               <!-- Data em DD/MM/YYYY -->
               <q-input class="col-6 col-sm-3" v-model="ordemForm.dataBR" label="Data" dense outlined readonly clearable>
                 <template #prepend><q-icon name="event" /></template>
@@ -498,6 +521,7 @@ import { FormaPag } from 'src/services/FormaPagService'
 import { OrdemPag } from 'src/services/OrdemPagService'
 import { Responsavel } from 'src/services/ResponsavelService'
 import { Veiculo } from 'src/services/VeiculoService'
+import { TipoLocal } from 'src/services/TipoLocalService'
 
 /* (ISO -> BR */
 function isoToBR (iso) {
@@ -579,6 +603,7 @@ function apiOrdemToForm (o = {}) {
     stt_id: o.stt_id ?? o.status_id ?? null,
     usu_id: o.usu_id ?? o.responsavel_id ?? null,
     vei_id: o.vei_id != null ? Number(o.vei_id) : null,
+    tpl_id: o.tpl_id != null ? Number(o.tpl_id) : null,
     observacao: o.observacao ?? o.descricao ?? '',
     data: o.data ?? null,
     hora: o.hora ?? null,
@@ -586,7 +611,8 @@ function apiOrdemToForm (o = {}) {
     status_nome:  o.status_nome ?? o.stt_nome ?? '',
     responsavel_nome: o.responsavel_nome ?? o.usu_nome ?? '',
     veiculo_placa:  o.veiculo_placa ?? '', 
-    veiculo_modelo: o.veiculo_modelo ?? ''
+    veiculo_modelo: o.veiculo_modelo ?? '',
+    tpl_nome: o.tpl_nome ?? o.tipolocal_nome ?? ''
   }
 }
 function formOrdemToApi (f = {}) {
@@ -597,6 +623,7 @@ function formOrdemToApi (f = {}) {
     stt_id: f.stt_id,
     usu_id: f.usu_id,
     vei_id: f.vei_id != null ? Number(f.vei_id) : null,
+    tpl_id: f.tpl_id != null ? Number(f.tpl_id) : null,
     observacao: (f.observacao || '').trim(),
     data: f.data || null,
     hora: f.hora || null
@@ -624,6 +651,7 @@ export default {
                    stt_id: null, 
                    usu_id: null, 
                    vei_id: null,
+                   tpl_id: null,
                    observacao: '', 
                    data: null, 
                    dataBR: null, 
@@ -652,6 +680,7 @@ export default {
       formaPagOptions: [],
       responsavelLookupOptions: [],
       veiculoLookupOptions: [],
+      tipoLocalLookupOptions: [],
 
       ui: {
         loading: {
@@ -662,6 +691,7 @@ export default {
           status: false,
           responsavel: false,
           veiculo: false,
+          tipoLocal: false,
           savingAll: false,
           savingEndereco: false
         },
@@ -695,6 +725,7 @@ export default {
         { name: 'hora',             label: 'Hora',          field: 'hora', align: 'left' },
         { name: 'responsavel_nome', label: 'Responsável',   field: 'responsavel_nome', align: 'left' },
         { name: 'veiculo', label: 'Veículo', field: r => `${r.veiculo_placa ?? ''} ${r.veiculo_modelo ? '— ' + r.veiculo_modelo : ''}`, align: 'left' },
+        { name: 'tipo_local', label: 'Tipo de Local', field: 'tpl_nome', align: 'left' },
       ],
 
       // colunas pagamentos
@@ -907,6 +938,35 @@ export default {
       try {
         const { items } = await FormaPag.getAll()
         this.formaPagOptions = (items || []).map(i => ({ label: i.nome, value: i.id, raw: i }))
+      } catch {}
+    },
+
+    async filterTipoLocal (val, update, abort) {
+      this.ui.loading.tipoLocal = true
+      try {
+        const { items } = await TipoLocal.getAll()
+        const list = (items || [])
+          .filter(t =>
+            !val ||
+            String(t.nome ?? '').toLowerCase().includes(String(val).toLowerCase()) ||
+            String(t.descricao ?? '').toLowerCase().includes(String(val).toLowerCase())
+          )
+          .map(t => ({
+            label: `${t.nome ?? 'Tipo'}${t.descricao ? ' — ' + t.descricao : ''}`,
+            value: Number(t.id)
+          }))
+        update(() => { this.tipoLocalLookupOptions = list })
+      } catch (e) { console.error(e); abort() }
+      finally { this.ui.loading.tipoLocal = false }
+    },
+
+    async loadTipoLocalOptionsInit () {
+      try {
+        const { items } = await TipoLocal.getAll()
+        this.tipoLocalLookupOptions = (items || []).map(t => ({
+          label: `${t.nome ?? 'Tipo'}${t.descricao ? ' — ' + t.descricao : ''}`,
+          value: Number(t.id)
+        }))
       } catch {}
     },
 
@@ -1139,6 +1199,16 @@ export default {
           ]
         } catch {}
       }
+
+      if (this.ordemForm.tpl_id && !this.tipoLocalLookupOptions.find(o => Number(o.value) === Number(this.ordemForm.tpl_id))) {
+        try {
+          const t = await TipoLocal.getById(this.ordemForm.tpl_id).then(r => r.item)
+          if (t) this.tipoLocalLookupOptions = [
+            ...this.tipoLocalLookupOptions,
+            { label: `${t.nome ?? 'Tipo'}${t.descricao ? ' — ' + t.descricao : ''}`, value: Number(t.id) }
+          ]
+        } catch {}
+      }
     },
 
     // Pagamentos (OS)
@@ -1235,7 +1305,7 @@ export default {
       this.enderecoForm = { id: null, cli_id: this.clienteForm.id ?? null, cid_id: null, uf_id: null, cli_logradouro: '', cli_numero: '', cli_bairro: '', cli_endereco: '', cli_cep: '', cli_ativo: 'S' }
       if (!keepUfCityLists) this.cidadeLookupOptions = []
     },
-    clearOS () { this.ordemForm = { id: null, cli_id: this.clienteForm.id ?? null, end_id: null, stt_id: null, usu_id: null, vei_id: null, observacao: '', data: null, dataBR: null, hora: null } },
+    clearOS () { this.ordemForm = { id: null, cli_id: this.clienteForm.id ?? null, end_id: null, stt_id: null, usu_id: null, vei_id: null, tpl_id: null, observacao: '', data: null, dataBR: null, hora: null } },
     clearAll () { this.clearOS(); this.clearEndereco(); this.clearCliente(); this.clearPagamentoForm(); this.pagamentos.items = [] },
 
     updateHeaderOffset () {
@@ -1320,7 +1390,8 @@ export default {
                        this.loadUfs(), 
                        this.loadFormaPagOptionsInit(), 
                        this.loadResponsaveisOptionsInit(),
-                       this.loadVeiculosOptionsInit()])
+                       this.loadVeiculosOptionsInit(),
+                       this.loadTipoLocalOptionsInit()])
     this.updateHeaderOffset()
     window.addEventListener('resize', this.updateHeaderOffset)
     await this.handleDeepLink()

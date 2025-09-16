@@ -242,8 +242,8 @@ function isActive (to) {
 // links
 const systemLinks = {
   consultas: [
-    { title: 'Consulta Ordens', icon: 'person_search', link: '/consultaordem' },
-    { title: 'Consulta Pagamentos', icon: 'account_balance_wallet', link: '/consultapagamento' },
+    { title: 'Consulta Ordens', icon: 'fact_check', link: '/consultaordem' },
+    { title: 'Consulta Pagamentos', icon: 'request_quote', link: '/consultapagamento' },
     { title: 'Report OS', icon: 'print', link: '/report' }
   ],
   cadastros: [
