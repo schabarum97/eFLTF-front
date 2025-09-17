@@ -125,7 +125,8 @@ const columns = [
   { name: 'hora', label: 'Hora', field: 'hora', sortable: true },
   { name: 'responsavel_nome', label: 'Responsável', field: 'responsavel_nome', sortable: true },
   { name: 'observacao', label: 'Observação', field: 'observacao', sortable: false },
-  { name: 'veiculo', label: 'Veículo', field: r => r.veiculo_placa ? `${r.veiculo_placa} — ${r.veiculo_modelo}` : '', sortable: false}
+  { name: 'veiculo', label: 'Veículo', field: r => r.veiculo_placa ? `${r.veiculo_placa} — ${r.veiculo_modelo}` : '', sortable: false},
+  { name: 'ord_wpp', label: 'Ordem criada por Wpp?', field: 'ord_wpp', sortable: false}
 ]
 
 const rowActions = [
